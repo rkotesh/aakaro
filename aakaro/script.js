@@ -3015,7 +3015,14 @@
           "Start over?",
           "<p>This clears your project data, idea, strategy, and selections from this browser session.</p>",
           "Start over",
-          () => resetProject()
+          () => {
+            localStorage.removeItem("aakaroProject");
+            state = getEmptyProject();
+            state.activeView = "app";
+            state.currentStage = "idea";
+            saveProject();
+            renderApp();
+          }
         );
       });
     }
@@ -3140,6 +3147,213 @@
         window.location.hash = "#app";
         saveProject();
         renderApp();
+      });
+    }
+
+    // ── Login / Register interactive form handling ────────
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegister = document.getElementById("tab-register");
+    const formLogin = document.getElementById("form-login");
+    const formRegister = document.getElementById("form-register");
+    const authHeading = document.getElementById("auth-heading");
+    const authSubheading = document.getElementById("auth-subheading");
+
+    function switchAuthTab(tab) {
+      const isLogin = tab === "login";
+      if (tabLogin) {
+        tabLogin.classList.toggle("active", isLogin);
+        tabLogin.setAttribute("aria-selected", isLogin ? "true" : "false");
+      }
+      if (tabRegister) {
+        tabRegister.classList.toggle("active", !isLogin);
+        tabRegister.setAttribute("aria-selected", !isLogin ? "true" : "false");
+      }
+      if (formLogin) formLogin.classList.toggle("active", isLogin);
+      if (formRegister) formRegister.classList.toggle("active", !isLogin);
+
+      if (authHeading) {
+        authHeading.textContent = isLogin ? "Welcome back" : "Create your account";
+      }
+      if (authSubheading) {
+        authSubheading.textContent = isLogin
+          ? "Sign in to your account."
+          : "It takes less than a minute.";
+      }
+
+      // Clear any messages
+      document.querySelectorAll(".auth-form-msg").forEach((el) => {
+        el.textContent = "";
+        el.className = "auth-form-msg";
+      });
+      document.querySelectorAll(".auth-field-err").forEach((el) => {
+        el.textContent = "";
+      });
+      document.querySelectorAll(".auth-field input").forEach((inp) => {
+        inp.removeAttribute("aria-invalid");
+      });
+    }
+
+    if (tabLogin) tabLogin.addEventListener("click", () => switchAuthTab("login"));
+    if (tabRegister) tabRegister.addEventListener("click", () => switchAuthTab("register"));
+
+    document.querySelectorAll("[data-go]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        switchAuthTab(btn.dataset.go);
+      });
+    });
+
+    // Password show/hide toggle
+    document.querySelectorAll(".auth-pw-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const isPw = input.type === "password";
+        input.type = isPw ? "text" : "password";
+        btn.textContent = isPw ? "Hide" : "Show";
+        btn.setAttribute("aria-label", isPw ? "Hide password" : "Show password");
+      });
+    });
+
+    // Password strength indicator
+    const rPwInput = document.getElementById("r-pw");
+    const pwMeterBar = document.getElementById("pw-meter-bar");
+    if (rPwInput && pwMeterBar) {
+      rPwInput.addEventListener("input", function () {
+        const val = this.value;
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[a-z]/.test(val) && /[A-Z]/.test(val)) score++;
+        if (/\d/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        if (!val) {
+          pwMeterBar.style.width = "0%";
+          pwMeterBar.style.background = "var(--error)";
+        } else {
+          const width = Math.max(score, 1) * 25;
+          pwMeterBar.style.width = width + "%";
+          pwMeterBar.style.background =
+            score <= 1 ? "var(--error)" : score < 4 ? "#d99a1b" : "var(--success)";
+        }
+      });
+    }
+
+    function setFormError(fieldId, text) {
+      const errEl = document.querySelector(`.auth-field-err[data-for="${fieldId}"]`);
+      const inputEl = document.getElementById(fieldId);
+      if (errEl) errEl.textContent = text || "";
+      if (inputEl && inputEl.type !== "checkbox") {
+        if (text) {
+          inputEl.setAttribute("aria-invalid", "true");
+        } else {
+          inputEl.removeAttribute("aria-invalid");
+        }
+      }
+      return !text;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Login submission
+    if (formLogin) {
+      formLogin.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const emailVal = (document.getElementById("l-email")?.value || "").trim();
+        const pwVal = document.getElementById("l-pw")?.value || "";
+
+        let valid = true;
+        valid = setFormError("l-email", emailRegex.test(emailVal) ? "" : "Enter a valid email address.") && valid;
+        valid = setFormError("l-pw", pwVal ? "" : "Enter your password.") && valid;
+
+        const msgEl = document.getElementById("login-msg");
+        if (!valid) {
+          if (msgEl) msgEl.textContent = "";
+          return;
+        }
+
+        // Generate user name from email
+        const derivedName = emailVal.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        state.session = {
+          isLoggedIn: true,
+          name: derivedName || "Signed In User",
+          email: emailVal,
+          avatar: derivedName ? derivedName.charAt(0).toUpperCase() : "U",
+          method: "email",
+        };
+
+        if (msgEl) {
+          msgEl.className = "auth-form-msg ok";
+          msgEl.textContent = "Welcome back! Entering workspace…";
+        }
+
+        setTimeout(() => {
+          state.activeView = "app";
+          window.location.hash = "#app";
+          saveProject();
+          renderApp();
+        }, 350);
+      });
+    }
+
+    // Register submission
+    if (formRegister) {
+      formRegister.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nameVal = (document.getElementById("r-name")?.value || "").trim();
+        const emailVal = (document.getElementById("r-email")?.value || "").trim();
+        const pwVal = document.getElementById("r-pw")?.value || "";
+        const pw2Val = document.getElementById("r-pw2")?.value || "";
+        const termsChecked = document.getElementById("terms")?.checked;
+
+        let valid = true;
+        valid = setFormError("r-name", nameVal.length >= 2 ? "" : "Enter your full name.") && valid;
+        valid = setFormError("r-email", emailRegex.test(emailVal) ? "" : "Enter a valid email address.") && valid;
+        valid = setFormError("r-pw", pwVal.length >= 8 && /[A-Za-z]/.test(pwVal) && /\d/.test(pwVal) ? "" : "Use at least 8 characters with a letter and a number.") && valid;
+        valid = setFormError("r-pw2", pw2Val === pwVal && pwVal ? "" : "Passwords do not match.") && valid;
+        valid = setFormError("terms", termsChecked ? "" : "Accept the terms to continue.") && valid;
+
+        const msgEl = document.getElementById("register-msg");
+        if (!valid) {
+          if (msgEl) msgEl.textContent = "";
+          return;
+        }
+
+        state.session = {
+          isLoggedIn: true,
+          name: nameVal,
+          email: emailVal,
+          avatar: nameVal.charAt(0).toUpperCase(),
+          method: "email",
+        };
+
+        if (msgEl) {
+          msgEl.className = "auth-form-msg ok";
+          msgEl.textContent = "Account created! Entering workspace…";
+        }
+
+        setTimeout(() => {
+          state.activeView = "app";
+          window.location.hash = "#app";
+          saveProject();
+          renderApp();
+        }, 350);
+      });
+    }
+
+    const forgotLink = document.getElementById("auth-forgot");
+    if (forgotLink) {
+      forgotLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        openModal(
+          "Reset password",
+          "<p>Enter your registered email and we will send you password reset instructions.</p><input type='email' id='reset-email-input' style='width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface-inset);color:var(--text);' placeholder='you@example.com'>",
+          "Send link",
+          () => {
+            alert("If an account exists, a reset link has been dispatched.");
+          }
+        );
       });
     }
 

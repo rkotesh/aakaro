@@ -182,9 +182,81 @@
             <div class="auth-content">
               <div class="auth-content-inner">
                 <span class="eyebrow">Aakaro</span>
-                <h2>It starts with <br />your idea.</h2>
-                <p class="muted intro">Bring the spark. <br />Let's see what it could become.</p>
+                <h2 id="auth-heading">Welcome back</h2>
+                <p class="muted intro" id="auth-subheading">Sign in to your account.</p>
 
+                <!-- Auth Tabs: Sign in / Create account -->
+                <div class="auth-tabs" role="tablist" aria-label="Sign in or register">
+                  <button type="button" role="tab" id="tab-login" class="auth-tab active" aria-selected="true" aria-controls="form-login">Sign in</button>
+                  <button type="button" role="tab" id="tab-register" class="auth-tab" aria-selected="false" aria-controls="form-register">Create account</button>
+                </div>
+
+                <!-- Sign In Form -->
+                <form id="form-login" class="auth-form active" novalidate>
+                  <div class="auth-field">
+                    <label for="l-email">Email</label>
+                    <input type="email" id="l-email" autocomplete="email" placeholder="you@example.com" required>
+                    <p class="auth-field-err" data-for="l-email"></p>
+                  </div>
+                  <div class="auth-field">
+                    <label for="l-pw">Password</label>
+                    <div class="auth-input-wrap">
+                      <input type="password" id="l-pw" class="auth-pw" autocomplete="current-password" placeholder="••••••••" required>
+                      <button type="button" class="auth-pw-toggle" data-target="l-pw" aria-label="Show password">Show</button>
+                    </div>
+                    <p class="auth-field-err" data-for="l-pw"></p>
+                  </div>
+                  <div class="auth-form-row">
+                    <label class="auth-check"><input type="checkbox" id="remember"> <span>Remember me</span></label>
+                    <a href="#" id="auth-forgot" class="auth-link">Forgot password?</a>
+                  </div>
+                  <button class="auth-submit-btn" type="submit">Sign in</button>
+                  <p class="auth-form-msg" id="login-msg" role="status"></p>
+                  <p class="auth-switch-prompt">New here? <button type="button" class="auth-text-btn" data-go="register">Create an account</button></p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="form-register" class="auth-form" novalidate>
+                  <div class="auth-field">
+                    <label for="r-name">Full name</label>
+                    <input type="text" id="r-name" autocomplete="name" placeholder="Alex Morgan" required>
+                    <p class="auth-field-err" data-for="r-name"></p>
+                  </div>
+                  <div class="auth-field">
+                    <label for="r-email">Email</label>
+                    <input type="email" id="r-email" autocomplete="email" placeholder="you@example.com" required>
+                    <p class="auth-field-err" data-for="r-email"></p>
+                  </div>
+                  <div class="auth-field">
+                    <label for="r-pw">Password</label>
+                    <div class="auth-input-wrap">
+                      <input type="password" id="r-pw" class="auth-pw" autocomplete="new-password" placeholder="••••••••" required>
+                      <button type="button" class="auth-pw-toggle" data-target="r-pw" aria-label="Show password">Show</button>
+                    </div>
+                    <div class="auth-pw-meter" aria-hidden="true"><span id="pw-meter-bar"></span></div>
+                    <p class="auth-field-hint">At least 8 characters, with a letter and a number.</p>
+                    <p class="auth-field-err" data-for="r-pw"></p>
+                  </div>
+                  <div class="auth-field">
+                    <label for="r-pw2">Confirm password</label>
+                    <input type="password" id="r-pw2" autocomplete="new-password" placeholder="••••••••" required>
+                    <p class="auth-field-err" data-for="r-pw2"></p>
+                  </div>
+                  <div class="auth-field">
+                    <label class="auth-check"><input type="checkbox" id="terms"> <span>I agree to the <a href="#" class="auth-link">Terms</a> and <a href="#" class="auth-link">Privacy Policy</a></span></label>
+                    <p class="auth-field-err" data-for="terms"></p>
+                  </div>
+                  <button class="auth-submit-btn" type="submit">Create account</button>
+                  <p class="auth-form-msg" id="register-msg" role="status"></p>
+                  <p class="auth-switch-prompt">Already have an account? <button type="button" class="auth-text-btn" data-go="login">Sign in</button></p>
+                </form>
+
+                <!-- Divider -->
+                <div class="auth-divider">
+                  <span>or continue with</span>
+                </div>
+
+                <!-- Social & Guest Options -->
                 <button type="button" class="google-button" id="btn-auth-google">
                   <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
                     <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.5-.2-2.2H12v4.3h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.8 3-4.4 3-7.6Z" />
